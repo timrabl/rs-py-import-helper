@@ -756,8 +756,8 @@ impl ImportHelper {
 
     /// Custom sorting for import items: `ALL_CAPS` first (alphabetically), then mixed case (alphabetically)
     fn custom_import_sort(a: &str, b: &str) -> std::cmp::Ordering {
-        let a_is_all_caps = a.chars().all(|c| (c.is_uppercase() || !c.is_alphabetic()));
-        let b_is_all_caps = b.chars().all(|c| (c.is_uppercase() || !c.is_alphabetic()));
+        let a_is_all_caps = a.chars().all(|c| c.is_uppercase() || !c.is_alphabetic());
+        let b_is_all_caps = b.chars().all(|c| c.is_uppercase() || !c.is_alphabetic());
 
         match (a_is_all_caps, b_is_all_caps) {
             // Both are ALL_CAPS or both are mixed case - sort alphabetically
