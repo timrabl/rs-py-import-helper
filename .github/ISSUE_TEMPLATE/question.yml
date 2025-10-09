@@ -1,0 +1,54 @@
+name: Question
+description: Need help or have a question about usage?
+title: "[Question]: "
+labels: ["question"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        No question is too simple! I'm happy to help, and your questions might help improve the documentation too.
+
+  - type: textarea
+    id: question
+    attributes:
+      label: What's your question?
+      description: Ask away!
+      placeholder: How do I...? or Is it possible to...?
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: What are you trying to do?
+      description: Some context about your use case can help me give a better answer
+      placeholder: "I'm building a... and I want to..."
+
+  - type: textarea
+    id: what-you-tried
+    attributes:
+      label: What have you tried?
+      description: Share any code you've tried, even if it doesn't work
+      render: rust
+      placeholder: |
+        use py_import_helper::ImportHelper;
+
+        // What I tried...
+        let mut helper = ImportHelper::new();
+
+  - type: textarea
+    id: expected-outcome
+    attributes:
+      label: What outcome do you want?
+      description: What should the end result look like?
+      placeholder: I want the output to be... or I want to be able to...
+
+  - type: checkboxes
+    id: documentation
+    attributes:
+      label: Documentation
+      description: Did you check the documentation?
+      options:
+        - label: I checked the [crates.io docs](https://docs.rs/py-import-helper)
+        - label: I read the README examples
+        - label: This might be missing from the docs (could be good to add!)

@@ -1,0 +1,43 @@
+[package]
+name = "py-import-helper"
+version = "0.1.0"
+edition = "2021"
+authors = ["Tim Oliver Rabl <contact@timrabl.de>"]
+license = "MIT"
+description = "Organize Python imports automatically - sorts and groups them according to PEP 8, perfect for code generation projects"
+homepage = "https://github.com/timrabl/rs-py-import-helper"
+repository = "https://github.com/timrabl/rs-py-import-helper"
+documentation = "https://docs.rs/py-import-helper"
+readme = "README.md"
+keywords = ["python", "imports", "codegen", "pep8", "formatting"]
+categories = ["development-tools", "parser-implementations", "text-processing"]
+rust-version = "1.70"
+exclude = [
+  "docs/*",
+  ".github/*",
+  "benches/target/*",
+  "target/*",
+  ".vscode/*",
+  ".claude/*",
+]
+
+[dependencies]
+
+[dev-dependencies]
+criterion = "0.7.0"
+
+[lib]
+name = "py_import_helper"
+path = "src/lib.rs"
+
+[[example]]
+name = "basic_usage"
+path = "examples/basic_usage.rs"
+
+[[example]]
+name = "type_checking"
+path = "examples/type_checking.rs"
+
+[[bench]]
+name = "benchmarks"
+harness = false

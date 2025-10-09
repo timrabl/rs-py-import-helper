@@ -1,0 +1,81 @@
+name: Bug Report
+description: Found something that doesn't work as expected? Let me know!
+title: "[Bug]: "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug! This helps make the library better for everyone.
+
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: Which version of py-import-helper are you using?
+      placeholder: "e.g., 0.2.0"
+    validations:
+      required: true
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: A clear description of what the bug is.
+      placeholder: Tell me what you expected vs what actually happened
+    validations:
+      required: true
+
+  - type: textarea
+    id: python-imports
+    attributes:
+      label: Python Import Example
+      description: If relevant, share the Python imports that are causing issues
+      render: python
+      placeholder: |
+        from typing import Any
+        import json
+        from mypackage import Something
+
+  - type: textarea
+    id: rust-code
+    attributes:
+      label: Rust Code
+      description: The Rust code that's not working as expected
+      render: rust
+      placeholder: |
+        use py_import_helper::ImportHelper;
+
+        let mut helper = ImportHelper::new();
+        helper.add_import_string("...");
+
+  - type: textarea
+    id: expected-output
+    attributes:
+      label: Expected Output
+      description: What output did you expect?
+      render: python
+
+  - type: textarea
+    id: actual-output
+    attributes:
+      label: Actual Output
+      description: What output did you get instead?
+      render: python
+
+  - type: dropdown
+    id: rust-version
+    attributes:
+      label: Rust Version
+      description: Which Rust version are you using?
+      options:
+        - 1.70+
+        - 1.69 or older
+        - Not sure
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context
+      description: Anything else that might be helpful?
+      placeholder: Environment details, workarounds you tried, etc.

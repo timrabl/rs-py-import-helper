@@ -1,0 +1,66 @@
+name: Feature Request
+description: Have an idea for a new feature? I'd love to hear it!
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the feature idea! Since I'm still learning Rust, your suggestions help me grow too.
+
+  - type: textarea
+    id: problem-description
+    attributes:
+      label: What problem would this solve?
+      description: Describe the use case or problem you're trying to solve
+      placeholder: "I'm trying to... but I can't because..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposed-solution
+    attributes:
+      label: What would you like to see?
+      description: Describe the feature you'd like
+      placeholder: "It would be great if the library could..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: example-usage
+    attributes:
+      label: Example Usage
+      description: Show how you'd like to use this feature
+      render: rust
+      placeholder: |
+        // Example of how this feature might work
+        let mut helper = ImportHelper::new();
+        helper.some_new_feature("...");
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives
+      description: Are there any workarounds or alternatives you've considered?
+      placeholder: "I've tried... but it doesn't quite work because..."
+
+  - type: dropdown
+    id: complexity
+    attributes:
+      label: How complex do you think this is?
+      description: Just a rough guess (no pressure to be accurate!)
+      options:
+        - Simple - probably just a new method
+        - Medium - might need some refactoring
+        - Complex - probably a big change
+        - Not sure
+
+  - type: checkboxes
+    id: contribution
+    attributes:
+      label: Contribution
+      description: Would you be interested in helping implement this?
+      options:
+        - label: I'd be willing to help implement this
+        - label: I can help with testing
+        - label: I can help with documentation
