@@ -1,0 +1,71 @@
+[workspace]
+# Enable changelog updates
+changelog_update = true
+# Update dependencies when releasing
+dependencies_update = true
+# Enable GitHub releases
+git_release_enable = true
+# Enable git tags (required for GitHub releases)
+git_tag_enable = true
+# Don't create draft releases
+git_release_draft = false
+# Set release as latest
+git_release_latest = true
+# Enable crates.io publishing
+publish = true
+# Run semver checks
+semver_check = true
+# Add labels to release PRs
+pr_labels = ["release"]
+# Customize git release body
+git_release_body = """
+## 📦 What's Changed
+
+{{ changelog }}
+
+## 📚 Documentation
+- [📖 Documentation](https://docs.rs/py-import-helper/{{ version }})
+- [📦 Crates.io](https://crates.io/crates/py-import-helper)
+
+## 🔧 Installation
+```toml
+[dependencies]
+py-import-helper = "{{ version }}"
+```
+
+## 🚀 Usage
+Check the [examples](https://github.com/timrabl/rs-py-import-helper/tree/main/examples) for usage patterns.
+"""
+
+[[package]]
+name = "py-import-helper"
+changelog_path = "CHANGELOG.md"
+
+[changelog]
+header = """
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+"""
+trim = true
+sort_commits = "newest"
+commit_parsers = [
+  { message = "^feat", group = "🚀 Features" },
+  { message = "^fix", group = "🐛 Bug Fixes" },
+  { message = "^doc", group = "📚 Documentation" },
+  { message = "^perf", group = "⚡ Performance" },
+  { message = "^refactor", group = "♻️  Refactor" },
+  { message = "^style", group = "🎨 Style" },
+  { message = "^test", group = "🧪 Testing" },
+  { message = "^chore\\(release\\): prepare for", skip = true },
+  { message = "^chore\\(deps.*\\)", skip = true },
+  { message = "^chore", group = "⚙️  Miscellaneous Tasks" },
+  { message = "^ci", group = "🔁 CI/CD" },
+  { message = "^build", group = "🏗️  Build System" },
+  { message = "^.*", group = "📦 Other" },
+]

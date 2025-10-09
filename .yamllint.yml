@@ -1,0 +1,33 @@
+# Ignore common directories and files
+ignore: |
+  .venv/
+  venv/
+  node_modules/
+  .git/
+  dist/
+  build/
+  __pycache__/
+  .pytest_cache/
+  .mypy_cache/
+  .ruff_cache/
+  .tox/
+  .idea/
+  .vscode/
+  *.egg-info/
+  coverage/
+  htmlcov/
+  .coverage
+  .nyc_output/
+  .env
+  .env.local
+  .env.*.local
+
+rules:
+  comments:
+    min-spaces-from-content: 1
+  quoted-strings:
+    required: only-when-needed
+    extra-allowed: ["{|}"]
+  key-duplicates: {}
+  octal-values:
+    forbid-implicit-octal: true
