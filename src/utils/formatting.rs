@@ -29,7 +29,7 @@ pub fn format_imports(imports: &[ImportStatement], config: &FormattingConfig) ->
             .get(package)
             .expect("BUG: package key must exist in HashMap");
 
-        if let Some(first) = imports_for_package.get(0) {
+        if let Some(first) = imports_for_package.first() {
             if imports_for_package.len() == 1 && first.items.is_empty() {
                 // Single direct import (e.g., "import os"), use as-is
                 result.push(first.statement.clone());
