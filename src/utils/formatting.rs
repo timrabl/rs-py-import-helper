@@ -39,10 +39,6 @@ pub fn format_imports(imports: &[ImportStatement], config: &FormattingConfig) ->
                 result.extend(merge_package_imports(imports_for_package, config));
             }
         }
-            // Either multiple imports from same package, or a single import with items
-            // In both cases, apply formatting logic (may need multi-line)
-            result.extend(merge_package_imports(imports_for_package, config));
-        }
     }
 
     result

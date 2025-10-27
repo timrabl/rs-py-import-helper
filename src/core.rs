@@ -374,10 +374,10 @@ impl ImportHelper {
         }
 
         // Sort each category alphabetically
-        future_imports.sort_by(Self::sort_import_statements);
-        stdlib_imports.sort_by(Self::sort_import_statements);
-        third_party_imports.sort_by(Self::sort_import_statements);
-        local_imports.sort_by(Self::sort_import_statements);
+        future_imports.sort_by(|a, b| Self::sort_import_statements(a, b));
+        stdlib_imports.sort_by(|a, b| Self::sort_import_statements(a, b));
+        third_party_imports.sort_by(|a, b| Self::sort_import_statements(a, b));
+        local_imports.sort_by(|a, b| Self::sort_import_statements(a, b));
 
         (
             future_imports,
@@ -433,10 +433,10 @@ impl ImportHelper {
         }
 
         // Sort each category alphabetically
-        future_imports.sort_by(Self::sort_import_statements);
-        stdlib_imports.sort_by(Self::sort_import_statements);
-        third_party_imports.sort_by(Self::sort_import_statements);
-        local_imports.sort_by(Self::sort_import_statements);
+        future_imports.sort_by(|a, b| Self::sort_import_statements(a, b));
+        stdlib_imports.sort_by(|a, b| Self::sort_import_statements(a, b));
+        third_party_imports.sort_by(|a, b| Self::sort_import_statements(a, b));
+        local_imports.sort_by(|a, b| Self::sort_import_statements(a, b));
 
         (
             future_imports,
