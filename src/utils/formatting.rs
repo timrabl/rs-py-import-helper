@@ -44,7 +44,10 @@ pub fn format_imports(imports: &[ImportStatement], config: &FormattingConfig) ->
 
 /// Merge multiple imports from the same package with configurable formatting
 #[must_use]
-pub fn merge_package_imports(imports: &[&ImportStatement], config: &FormattingConfig) -> Vec<String> {
+pub fn merge_package_imports(
+    imports: &[&ImportStatement],
+    config: &FormattingConfig,
+) -> Vec<String> {
     let mut all_items = HashSet::new();
     let package = &imports[0].package;
 
@@ -69,7 +72,11 @@ pub fn merge_package_imports(imports: &[&ImportStatement], config: &FormattingCo
     } else {
         // Auto-detect based on configuration
         let total_chars = sorted_items.iter().map(String::len).sum::<usize>();
-        let import_line_length = "from ".len() + package.len() + " import ".len() + total_chars + (sorted_items.len() * 2);
+        let import_line_length = "from ".len()
+            + package.len()
+            + " import ".len()
+            + total_chars
+            + (sorted_items.len() * 2);
 
         sorted_items.len() >= config.multiline_threshold || import_line_length > config.line_length
     };

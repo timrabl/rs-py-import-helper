@@ -1084,8 +1084,10 @@ mod tests {
 
         // Verify alphabetical order in typing import (case-insensitive, but considering both single and multi-line)
         assert!(
-            typing_section.contains("Any") && typing_section.contains("Dict")
-            && typing_section.contains("List") && typing_section.contains("Optional"),
+            typing_section.contains("Any")
+                && typing_section.contains("Dict")
+                && typing_section.contains("List")
+                && typing_section.contains("Optional"),
             "Import should contain all items: Any, Dict, List, Optional in alphabetical order"
         );
     }
@@ -1109,13 +1111,34 @@ mod tests {
             .collect();
 
         // Verify all 4 imports are present
-        assert_eq!(import_lines.len(), 4, "Should have 4 direct imports, got: {:?}", import_lines);
+        assert_eq!(
+            import_lines.len(),
+            4,
+            "Should have 4 direct imports, got: {:?}",
+            import_lines
+        );
 
         // Verify they are sorted alphabetically
-        assert!(import_lines[0].contains("json"), "First should be json, got: {}", import_lines[0]);
-        assert!(import_lines[1].contains("os"), "Second should be os, got: {}", import_lines[1]);
-        assert!(import_lines[2].contains("sys"), "Third should be sys, got: {}", import_lines[2]);
-        assert!(import_lines[3].contains("uuid"), "Fourth should be uuid, got: {}", import_lines[3]);
+        assert!(
+            import_lines[0].contains("json"),
+            "First should be json, got: {}",
+            import_lines[0]
+        );
+        assert!(
+            import_lines[1].contains("os"),
+            "Second should be os, got: {}",
+            import_lines[1]
+        );
+        assert!(
+            import_lines[2].contains("sys"),
+            "Third should be sys, got: {}",
+            import_lines[2]
+        );
+        assert!(
+            import_lines[3].contains("uuid"),
+            "Fourth should be uuid, got: {}",
+            import_lines[3]
+        );
     }
 
     #[test]

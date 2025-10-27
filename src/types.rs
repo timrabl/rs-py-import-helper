@@ -46,8 +46,8 @@ pub struct FormattingConfig {
 impl Default for FormattingConfig {
     fn default() -> Self {
         Self {
-            line_length: 79,         // PEP 8 standard
-            indent_size: 4,          // PEP 8 standard
+            line_length: 79,          // PEP 8 standard
+            indent_size: 4,           // PEP 8 standard
             use_trailing_comma: true, // Black/isort style
             force_single_line: false,
             force_multiline: false,
