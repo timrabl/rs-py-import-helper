@@ -26,6 +26,64 @@ pub enum ImportType {
     From,
 }
 
+/// Configuration for import formatting (isort/ruff compatible)
+#[derive(Debug, Clone)]
+pub struct FormattingConfig {
+    /// Maximum line length before breaking into multi-line format (default: 79 for PEP 8)
+    pub line_length: usize,
+    /// Number of spaces for indentation (default: 4)
+    pub indent_size: usize,
+    /// Whether to use trailing commas in multi-line imports (default: true)
+    pub use_trailing_comma: bool,
+    /// Force all from imports to use single-line format (default: false)
+    pub force_single_line: bool,
+    /// Force all from imports to use multi-line format (default: false)
+    pub force_multiline: bool,
+    /// Minimum number of items to trigger multi-line format when auto-detecting (default: 4)
+    pub multiline_threshold: usize,
+}
+
+impl Default for FormattingConfig {
+    fn default() -> Self {
+        Self {
+            line_length: 79,          // PEP 8 standard
+            indent_size: 4,           // PEP 8 standard
+            use_trailing_comma: true, // Black/isort style
+            force_single_line: false,
+            force_multiline: false,
+            multiline_threshold: 4,
+        }
+    }
+}
+
+impl FormattingConfig {
+    /// Create a configuration matching Black's defaults (88 char line length)
+    pub fn black_compatible() -> Self {
+        Self {
+            line_length: 88,
+            ..Default::default()
+        }
+    }
+
+    /// Create a configuration matching isort's defaults
+    pub fn isort_compatible() -> Self {
+        Self::default()
+    }
+
+    /// Create a configuration matching ruff's defaults
+    pub fn ruff_compatible() -> Self {
+        Self {
+            line_length: 88,
+            ..Default::default()
+        }
+    }
+
+    /// Create a PEP 8 compliant configuration (79 char line length)
+    pub fn pep8_compatible() -> Self {
+        Self::default()
+    }
+}
+
 /// Specification for adding imports in a structured way
 #[derive(Debug, Clone)]
 pub struct ImportSpec {

@@ -42,7 +42,7 @@ pub use registry::PackageRegistry;
 
 // Re-export types that might be needed for advanced usage
 #[allow(unused_imports)]
-pub use types::{ImportCategory, ImportSections, ImportStatement, ImportType};
+pub use types::{FormattingConfig, ImportCategory, ImportSections, ImportStatement, ImportType};
 
 // Re-export constants for external use
 #[allow(unused_imports)]
