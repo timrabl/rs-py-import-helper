@@ -116,8 +116,16 @@ pub fn custom_import_sort(a: &str, b: &str) -> std::cmp::Ordering {
             .all(char::is_uppercase);
 
     match (a_is_all_caps, b_is_all_caps) {
-        // Both are ALL_CAPS or both are mixed case - sort alphabetically
-        (true, true) | (false, false) => a.cmp(b),
+        // Both are ALL_CAPS or both are mixed case - sort alphabetically (case-insensitive)
+        (true, true) | (false, false) => {
+            // Case-insensitive comparison to match isort/ruff behavior
+            let a_lower = a.to_lowercase();
+            let b_lower = b.to_lowercase();
+            match a_lower.cmp(&b_lower) {
+                std::cmp::Ordering::Equal => a.cmp(b), // If equal case-insensitively, use case-sensitive as tiebreaker
+                other => other,
+            }
+        }
         // a is ALL_CAPS, b is mixed case - a comes first
         (true, false) => std::cmp::Ordering::Less,
         // a is mixed case, b is ALL_CAPS - b comes first

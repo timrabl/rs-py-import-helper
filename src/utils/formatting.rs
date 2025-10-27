@@ -4,12 +4,12 @@
 //! according to PEP 8 and common formatting standards (isort, Black).
 
 use super::parsing::custom_import_sort;
-use crate::types::ImportStatement;
+use crate::types::{FormattingConfig, ImportStatement};
 use std::collections::{HashMap, HashSet};
 
 /// Format a list of imports, merging same-package imports where appropriate
 #[must_use]
-pub fn format_imports(imports: &[ImportStatement]) -> Vec<String> {
+pub fn format_imports(imports: &[ImportStatement], config: &FormattingConfig) -> Vec<String> {
     let mut package_imports: HashMap<String, Vec<&ImportStatement>> = HashMap::new();
 
     // Group imports by package
@@ -29,21 +29,22 @@ pub fn format_imports(imports: &[ImportStatement]) -> Vec<String> {
             .get(package)
             .expect("BUG: package key must exist in HashMap");
 
-        if imports_for_package.len() == 1 {
-            // Single import, use as-is
+        if imports_for_package.len() == 1 && imports_for_package[0].items.is_empty() {
+            // Single direct import (e.g., "import os"), use as-is
             result.push(imports_for_package[0].statement.clone());
         } else {
-            // Multiple imports from same package, merge if possible
-            result.extend(merge_package_imports(imports_for_package));
+            // Either multiple imports from same package, or a single import with items
+            // In both cases, apply formatting logic (may need multi-line)
+            result.extend(merge_package_imports(imports_for_package, config));
         }
     }
 
     result
 }
 
-/// Merge multiple imports from the same package
+/// Merge multiple imports from the same package with configurable formatting
 #[must_use]
-pub fn merge_package_imports(imports: &[&ImportStatement]) -> Vec<String> {
+pub fn merge_package_imports(imports: &[&ImportStatement], config: &FormattingConfig) -> Vec<String> {
     let mut all_items = HashSet::new();
     let package = &imports[0].package;
 
@@ -60,28 +61,41 @@ pub fn merge_package_imports(imports: &[&ImportStatement]) -> Vec<String> {
     let mut sorted_items: Vec<_> = all_items.into_iter().collect();
     sorted_items.sort_by(|a, b| custom_import_sort(a, b));
 
-    // Format as single line or multi-line based on length
-    if sorted_items.len() <= 3
-        && sorted_items
-            .iter()
-            .map(std::string::String::len)
-            .sum::<usize>()
-            < 60
-    {
+    // Determine if we should use multi-line format
+    let should_use_multiline = if config.force_multiline {
+        true
+    } else if config.force_single_line {
+        false
+    } else {
+        // Auto-detect based on configuration
+        let total_chars = sorted_items.iter().map(String::len).sum::<usize>();
+        let import_line_length = "from ".len() + package.len() + " import ".len() + total_chars + (sorted_items.len() * 2);
+
+        sorted_items.len() >= config.multiline_threshold || import_line_length > config.line_length
+    };
+
+    if should_use_multiline {
+        // Multi-line with parentheses
+        let indent = " ".repeat(config.indent_size);
+        let mut result = vec![format!("from {} import (", package)];
+
+        for item in &sorted_items {
+            if config.use_trailing_comma {
+                result.push(format!("{}{},", indent, item));
+            } else {
+                result.push(format!("{}{}", indent, item));
+            }
+        }
+
+        result.push(")".to_string());
+        result
+    } else {
         // Single line
         vec![format!(
             "from {} import {}",
             package,
             sorted_items.join(", ")
         )]
-    } else {
-        // Multi-line with parentheses
-        let mut result = vec![format!("from {} import (", package)];
-        for item in sorted_items {
-            result.push(format!("    {item},"));
-        }
-        result.push(")".to_string());
-        result
     }
 }
 
@@ -110,7 +124,8 @@ mod tests {
             is_multiline: false,
         };
 
-        let merged = merge_package_imports(&[&import1, &import2]);
+        let config = FormattingConfig::default();
+        let merged = merge_package_imports(&[&import1, &import2], &config);
         assert_eq!(merged.len(), 1);
         assert!(merged[0].contains("Any"));
         assert!(merged[0].contains("Optional"));
