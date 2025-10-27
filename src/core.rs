@@ -747,7 +747,7 @@ impl ImportHelper {
                     .collect();
 
                 // Sort items with ALL_CAPS first, then mixed case alphabetically
-                items.sort_by(|a, b| Self::custom_import_sort(a, b));
+                items.sort_by(|a, b| crate::utils::parsing::custom_import_sort(a, b));
                 return items;
             }
         } else if let Some(import_part) = import_statement.strip_prefix("import ") {
@@ -818,28 +818,6 @@ impl ImportHelper {
         }
     }
 
-    fn custom_import_sort(a: &str, b: &str) -> std::cmp::Ordering {
-        let a_is_all_caps = a.chars().all(|c| c.is_uppercase() || !c.is_alphabetic());
-        let b_is_all_caps = b.chars().all(|c| c.is_uppercase() || !c.is_alphabetic());
-
-        match (a_is_all_caps, b_is_all_caps) {
-            // Both are ALL_CAPS or both are mixed case - sort alphabetically (case-insensitive)
-            (true, true) | (false, false) => {
-                // Case-insensitive comparison to match isort/ruff behavior
-                let a_lower = a.to_lowercase();
-                let b_lower = b.to_lowercase();
-                match a_lower.cmp(&b_lower) {
-                    std::cmp::Ordering::Equal => a.cmp(b), // If equal case-insensitively, use case-sensitive as tiebreaker
-                    other => other,
-                }
-            }
-            // a is ALL_CAPS, b is mixed case - a comes first
-            (true, false) => std::cmp::Ordering::Less,
-            // a is mixed case, b is ALL_CAPS - b comes first
-            (false, true) => std::cmp::Ordering::Greater,
-        }
-    }
-
     /// Automatically add `TYPE_CHECKING` to typing import when type checking imports are used
     fn ensure_type_checking_import_added(&mut self) {
         // Check if we already have a typing import with TYPE_CHECKING
@@ -860,7 +838,7 @@ impl ImportHelper {
                     typing_import.items.push("TYPE_CHECKING".to_string());
                     typing_import
                         .items
-                        .sort_by(|a, b| Self::custom_import_sort(a, b));
+                        .sort_by(|a, b| crate::utils::parsing::custom_import_sort(a, b));
 
                     // Update the statement string
                     if typing_import.items.len() == 1 {

@@ -238,11 +238,31 @@ fn test_alphabetical_order_within_groups() {
         .collect();
 
     // Should be alphabetically sorted - asyncio, json, os, sys
-    assert!(stdlib_imports.len() >= 4, "Expected at least 4 imports, got: {:?}", stdlib_imports);
-    assert!(stdlib_imports[0].contains("asyncio"), "First should be asyncio, got: {}", stdlib_imports[0]);
-    assert!(stdlib_imports[1].contains("json"), "Second should be json, got: {}", stdlib_imports[1]);
-    assert!(stdlib_imports[2].contains("os"), "Third should be os, got: {}", stdlib_imports[2]);
-    assert!(stdlib_imports[3].contains("sys"), "Fourth should be sys, got: {}", stdlib_imports[3]);
+    assert!(
+        stdlib_imports.len() >= 4,
+        "Expected at least 4 imports, got: {:?}",
+        stdlib_imports
+    );
+    assert!(
+        stdlib_imports[0].contains("asyncio"),
+        "First should be asyncio, got: {}",
+        stdlib_imports[0]
+    );
+    assert!(
+        stdlib_imports[1].contains("json"),
+        "Second should be json, got: {}",
+        stdlib_imports[1]
+    );
+    assert!(
+        stdlib_imports[2].contains("os"),
+        "Third should be os, got: {}",
+        stdlib_imports[2]
+    );
+    assert!(
+        stdlib_imports[3].contains("sys"),
+        "Fourth should be sys, got: {}",
+        stdlib_imports[3]
+    );
 }
 
 /// Test PEP 8: Direct imports before from imports within group
@@ -446,7 +466,10 @@ fn test_caps_before_lowercase() {
     let full_import = stdlib.join(" ");
 
     // All items should be present somewhere in the imports
-    assert!(full_import.contains("TYPE_CHECKING"), "Should contain TYPE_CHECKING");
+    assert!(
+        full_import.contains("TYPE_CHECKING"),
+        "Should contain TYPE_CHECKING"
+    );
     assert!(full_import.contains("Any"), "Should contain Any");
     assert!(full_import.contains("Optional"), "Should contain Optional");
     assert!(full_import.contains("LITERAL"), "Should contain LITERAL");

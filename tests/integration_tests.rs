@@ -131,7 +131,11 @@ fn test_import_spec_api() {
     let (_, stdlib, _, _) = helper.get_categorized();
     let (_, _, tc_third_party, _) = helper.get_type_checking_categorized();
 
-    assert!(stdlib.iter().any(|s| s.contains("import sys")), "Should contain 'import sys', got: {:?}", stdlib);
+    assert!(
+        stdlib.iter().any(|s| s.contains("import sys")),
+        "Should contain 'import sys', got: {:?}",
+        stdlib
+    );
     assert!(stdlib.iter().any(|s| s.contains("from typing import")));
     assert!(tc_third_party
         .iter()
@@ -210,7 +214,10 @@ fn test_helper_reset() {
     helper.add_import_string("from myapp.utils import helper");
     let (_, _, _, local) = helper.get_categorized();
 
-    assert!(!local.is_empty(), "Local imports should be recognized after clear()");
+    assert!(
+        !local.is_empty(),
+        "Local imports should be recognized after clear()"
+    );
 }
 
 /// Test helper clone_config
