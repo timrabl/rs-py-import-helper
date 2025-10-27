@@ -804,7 +804,7 @@ impl ImportHelper {
         crate::utils::formatting::format_imports(imports, &self.formatting_config)
     }
 
-    fn sort_import_statements(a: &String, b: &String) -> std::cmp::Ordering {
+    fn sort_import_statements(a: &str, b: &str) -> std::cmp::Ordering {
         let a_is_import = a.starts_with("import ");
         let b_is_import = b.starts_with("import ");
 
