@@ -29,10 +29,16 @@ pub fn format_imports(imports: &[ImportStatement], config: &FormattingConfig) ->
             .get(package)
             .expect("BUG: package key must exist in HashMap");
 
-        if imports_for_package.len() == 1 && imports_for_package[0].items.is_empty() {
-            // Single direct import (e.g., "import os"), use as-is
-            result.push(imports_for_package[0].statement.clone());
-        } else {
+        if let Some(first) = imports_for_package.get(0) {
+            if imports_for_package.len() == 1 && first.items.is_empty() {
+                // Single direct import (e.g., "import os"), use as-is
+                result.push(first.statement.clone());
+            } else {
+                // Either multiple imports from same package, or a single import with items
+                // In both cases, apply formatting logic (may need multi-line)
+                result.extend(merge_package_imports(imports_for_package, config));
+            }
+        }
             // Either multiple imports from same package, or a single import with items
             // In both cases, apply formatting logic (may need multi-line)
             result.extend(merge_package_imports(imports_for_package, config));
