@@ -469,6 +469,7 @@ impl ImportHelper {
     /// ```
     pub fn clear(&mut self) -> &mut Self {
         self.sections = ImportSections::default();
+        self.category_cache.clear();
         self
     }
 
