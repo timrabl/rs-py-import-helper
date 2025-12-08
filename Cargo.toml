@@ -24,7 +24,7 @@ exclude = [
 [dependencies]
 
 [dev-dependencies]
-criterion = "0.7.0"
+criterion = "0.8.1"
 
 [lib]
 name = "py_import_helper"
