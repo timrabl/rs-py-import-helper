@@ -9,6 +9,14 @@ pub mod constants;
 use constants::{COMMON_THIRD_PARTY_PACKAGES, PYTHON_STDLIB_MODULES};
 use std::collections::HashSet;
 
+/// Root (first dotted segment) of a package path, if it has one.
+///
+/// `urllib.parse` -> `Some("urllib")`; `typing` -> `None`.
+#[must_use]
+fn root_segment(package: &str) -> Option<&str> {
+    package.split_once('.').map(|(root, _)| root)
+}
+
 /// Registry for package categorization
 ///
 /// Maintains lists of known standard library and third-party packages.
@@ -23,7 +31,8 @@ pub struct PackageRegistry {
 }
 
 impl PackageRegistry {
-    /// Create a new registry with default Python 3.13 stdlib and common third-party packages
+    /// Create a new registry with the default standard library and common
+    /// third-party packages (see [`constants`]).
     #[must_use]
     pub fn new() -> Self {
         Self {
@@ -32,16 +41,23 @@ impl PackageRegistry {
         }
     }
 
-    /// Check if a package is in the standard library
+    /// Check if a package is in the standard library.
+    ///
+    /// Matches the exact name or, for a dotted path, its root segment
+    /// (`urllib.parse` -> `urllib`, `os.path` -> `os`).
     #[must_use]
     pub fn is_stdlib(&self, package: &str) -> bool {
         self.stdlib_packages.contains(package)
+            || root_segment(package).is_some_and(|root| self.stdlib_packages.contains(root))
     }
 
-    /// Check if a package is a known third-party package
+    /// Check if a package is a known third-party package.
+    ///
+    /// Matches the exact name or its root segment for dotted paths.
     #[must_use]
     pub fn is_third_party(&self, package: &str) -> bool {
         self.third_party_packages.contains(package)
+            || root_segment(package).is_some_and(|root| self.third_party_packages.contains(root))
     }
 
     /// Add a package to the standard library registry

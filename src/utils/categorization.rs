@@ -64,16 +64,28 @@ pub fn is_local_import<S: ::std::hash::BuildHasher>(
     false
 }
 
-/// Check if a package is part of Python's standard library
+/// Check if a package is part of Python's standard library.
+///
+/// Matches the exact name or, for a dotted path, its root segment
+/// (`urllib.parse` -> `urllib`). Uses the built-in default list; for
+/// registry-aware categorization that reflects runtime customization, use
+/// [`ImportHelper`](crate::ImportHelper).
 #[must_use]
 pub fn is_standard_library_package(package: &str) -> bool {
     PYTHON_STDLIB_MODULES.contains(&package)
+        || root_segment(package).is_some_and(|root| PYTHON_STDLIB_MODULES.contains(&root))
 }
 
-/// Check if a package is a common third-party package
+/// Check if a package is a common third-party package (built-in default list).
 #[must_use]
 pub fn is_common_third_party_package(package: &str) -> bool {
     COMMON_THIRD_PARTY_PACKAGES.contains(&package)
+        || root_segment(package).is_some_and(|root| COMMON_THIRD_PARTY_PACKAGES.contains(&root))
+}
+
+/// Root (first dotted segment) of a package path, if it has one.
+fn root_segment(package: &str) -> Option<&str> {
+    package.split_once('.').map(|(root, _)| root)
 }
 
 #[cfg(test)]
