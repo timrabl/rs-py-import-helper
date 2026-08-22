@@ -65,22 +65,26 @@ pub fn extract_items(import_statement: &str) -> Vec<String> {
     if let Some(from_part) = import_statement.strip_prefix("from ") {
         // Use split_once for Unicode-safe splitting
         if let Some((_, items_part)) = from_part.split_once(" import ") {
-            // Unicode-safe character replacement in single pass
+            // Strip only the wrapping parens; commas separate items. Splitting on
+            // whitespace here would break `Name as Alias` into three items (#13).
             let cleaned: String = items_part
                 .chars()
                 .map(|c| match c {
-                    '(' | ')' | ',' => ' ',
+                    '(' | ')' => ' ',
                     _ => c,
                 })
                 .collect();
             let mut items: Vec<String> = cleaned
-                .split_whitespace()
-                .map(|s| s.trim().to_string())
+                .split(',')
+                // Collapse internal whitespace/newlines so `Name  as  Alias`
+                // normalizes to `Name as Alias` while staying one item.
+                .map(|s| s.split_whitespace().collect::<Vec<_>>().join(" "))
                 .filter(|s| !s.is_empty())
                 .collect();
 
-            // Sort items with ALL_CAPS first, then mixed case alphabetically
-            items.sort_by(|a, b| custom_import_sort(a, b));
+            // Sort ALL_CAPS first, then mixed case, keyed on the original bound
+            // name (the part before ` as `), matching isort.
+            items.sort_by(|a, b| custom_import_sort(item_sort_key(a), item_sort_key(b)));
             return items;
         }
     } else if import_statement.starts_with("import ") {
@@ -89,6 +93,14 @@ pub fn extract_items(import_statement: &str) -> Vec<String> {
         return Vec::new();
     }
     Vec::new()
+}
+
+/// Sort key for an imported item: the original name, ignoring an `as` alias.
+///
+/// `Any as A` sorts as `Any`; a plain `Optional` sorts as itself.
+#[must_use]
+pub(crate) fn item_sort_key(item: &str) -> &str {
+    item.split_once(" as ").map_or(item, |(name, _)| name)
 }
 
 /// Custom sorting for import items: `ALL_CAPS` first (alphabetically), then mixed case (alphabetically)

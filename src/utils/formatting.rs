@@ -3,7 +3,7 @@
 //! This module provides functions for formatting Python import statements
 //! according to PEP 8 and common formatting standards (isort, Black).
 
-use super::parsing::custom_import_sort;
+use super::parsing::{custom_import_sort, item_sort_key};
 use crate::types::{FormattingConfig, ImportStatement};
 use std::collections::{HashMap, HashSet};
 
@@ -64,7 +64,7 @@ pub fn merge_package_imports(
     }
 
     let mut sorted_items: Vec<_> = all_items.into_iter().collect();
-    sorted_items.sort_by(|a, b| custom_import_sort(a, b));
+    sorted_items.sort_by(|a, b| custom_import_sort(item_sort_key(a), item_sort_key(b)));
 
     // Determine if we should use multi-line format
     let should_use_multiline = if config.force_multiline {

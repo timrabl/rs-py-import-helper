@@ -715,48 +715,18 @@ impl ImportHelper {
         category
     }
 
-    /// Extract the package name from an import statement
+    /// Extract the package name from an import statement.
+    ///
+    /// Delegates to `utils::parsing` so the parse rules have one home.
     fn extract_package(import_statement: &str) -> String {
-        if let Some(from_part) = import_statement.strip_prefix("from ") {
-            if let Some(import_pos) = from_part.find(" import ") {
-                return from_part[..import_pos].trim().to_string();
-            }
-        } else if let Some(import_part) = import_statement.strip_prefix("import ") {
-            // For direct imports, return the full module path
-            return import_part
-                .split_whitespace()
-                .next()
-                .unwrap_or(import_part)
-                .trim()
-                .to_string();
-        }
-
-        import_statement.to_string()
+        crate::utils::parsing::extract_package(import_statement)
     }
 
-    /// Extract imported items from an import statement
+    /// Extract imported items from an import statement.
+    ///
+    /// Delegates to `utils::parsing` (alias-aware, direct-imports have no items).
     fn extract_items(import_statement: &str) -> Vec<String> {
-        if let Some(from_part) = import_statement.strip_prefix("from ") {
-            if let Some(import_pos) = from_part.find(" import ") {
-                let items_part = &from_part[import_pos + 8..];
-                let cleaned = items_part.replace(['(', ')'], "").replace(',', " ");
-                let mut items: Vec<String> = cleaned
-                    .split_whitespace()
-                    .map(|s| s.trim().to_string())
-                    .filter(|s| !s.is_empty())
-                    .collect();
-
-                // Sort items with ALL_CAPS first, then mixed case alphabetically
-                items.sort_by(|a, b| crate::utils::parsing::custom_import_sort(a, b));
-                return items;
-            }
-        } else if import_statement.starts_with("import ") {
-            // Direct imports (`import x`, `import x as y`) have no from-items;
-            // the module is carried by `package`/`statement`. Returning the
-            // module here would make it merge into `from x import x` (#12).
-            return Vec::new();
-        }
-        Vec::new()
+        crate::utils::parsing::extract_items(import_statement)
     }
 
     /// Check if this is a local/relative import
