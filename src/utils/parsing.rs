@@ -83,9 +83,10 @@ pub fn extract_items(import_statement: &str) -> Vec<String> {
             items.sort_by(|a, b| custom_import_sort(a, b));
             return items;
         }
-    } else if let Some(import_part) = import_statement.strip_prefix("import ") {
-        // For direct imports, the "item" is the module itself
-        return vec![import_part.trim().to_string()];
+    } else if import_statement.starts_with("import ") {
+        // Direct imports have no from-items; the module is the statement itself.
+        // Returning it here would merge `import x` into `from x import x` (#12).
+        return Vec::new();
     }
     Vec::new()
 }
