@@ -118,7 +118,10 @@ impl ImportHelper {
     /// assert!(stdlib.iter().any(|s| s.contains("my_custom_stdlib")));
     /// ```
     pub fn registry_mut(&mut self) -> &mut PackageRegistry {
-        // Clear cache when registry is modified
+        // A registry change can alter categorization, so drop the cache now;
+        // the next categorize re-evaluates against the updated registry.
+        // (Previously this comment lied and nothing was cleared.)
+        self.category_cache.clear();
         &mut self.registry
     }
 
@@ -327,57 +330,19 @@ impl ImportHelper {
 
     #[must_use]
     pub fn get_type_checking_categorized_impl(&self) -> CategorizedImports {
-        let mut future_imports = Vec::new();
-        let mut stdlib_imports = Vec::new();
-        let mut third_party_imports = Vec::new();
-        let mut local_imports = Vec::new();
-
-        // Future imports
-        if !self.sections.type_checking_future.is_empty() {
-            let future = self.format_imports(&self.sections.type_checking_future);
-            future_imports.extend(future);
-        }
-
-        // Standard library imports - direct first, then from
-        if !self
-            .sections
-            .type_checking_standard_library_direct
-            .is_empty()
-        {
-            let std_direct =
-                self.format_imports(&self.sections.type_checking_standard_library_direct);
-            stdlib_imports.extend(std_direct);
-        }
-        if !self.sections.type_checking_standard_library_from.is_empty() {
-            let std_from = self.format_imports(&self.sections.type_checking_standard_library_from);
-            stdlib_imports.extend(std_from);
-        }
-
-        // Third-party imports - direct first, then from
-        if !self.sections.type_checking_third_party_direct.is_empty() {
-            let third_direct = self.format_imports(&self.sections.type_checking_third_party_direct);
-            third_party_imports.extend(third_direct);
-        }
-        if !self.sections.type_checking_third_party_from.is_empty() {
-            let third_from = self.format_imports(&self.sections.type_checking_third_party_from);
-            third_party_imports.extend(third_from);
-        }
-
-        // Local imports - direct first, then from
-        if !self.sections.type_checking_local_direct.is_empty() {
-            let local_direct = self.format_imports(&self.sections.type_checking_local_direct);
-            local_imports.extend(local_direct);
-        }
-        if !self.sections.type_checking_local_from.is_empty() {
-            let local_from = self.format_imports(&self.sections.type_checking_local_from);
-            local_imports.extend(local_from);
-        }
-
-        // Sort each category alphabetically
-        future_imports.sort_by(|a, b| Self::sort_import_statements(a, b));
-        stdlib_imports.sort_by(|a, b| Self::sort_import_statements(a, b));
-        third_party_imports.sort_by(|a, b| Self::sort_import_statements(a, b));
-        local_imports.sort_by(|a, b| Self::sort_import_statements(a, b));
+        let future_imports = self.categorize_section(&self.sections.type_checking_future, &[]);
+        let stdlib_imports = self.categorize_section(
+            &self.sections.type_checking_standard_library_direct,
+            &self.sections.type_checking_standard_library_from,
+        );
+        let third_party_imports = self.categorize_section(
+            &self.sections.type_checking_third_party_direct,
+            &self.sections.type_checking_third_party_from,
+        );
+        let local_imports = self.categorize_section(
+            &self.sections.type_checking_local_direct,
+            &self.sections.type_checking_local_from,
+        );
 
         (
             future_imports,
@@ -391,52 +356,17 @@ impl ImportHelper {
     /// Returns (`future_imports`, `stdlib_imports`, `third_party_imports`, `local_imports`)
     #[must_use]
     pub fn get_categorized(&self) -> CategorizedImports {
-        let mut future_imports = Vec::new();
-        let mut stdlib_imports = Vec::new();
-        let mut third_party_imports = Vec::new();
-        let mut local_imports = Vec::new();
-
-        // Future imports
-        if !self.sections.future.is_empty() {
-            let future = self.format_imports(&self.sections.future);
-            future_imports.extend(future);
-        }
-
-        // Standard library imports - direct first, then from
-        if !self.sections.standard_library_direct.is_empty() {
-            let std_direct_imports = self.format_imports(&self.sections.standard_library_direct);
-            stdlib_imports.extend(std_direct_imports);
-        }
-        if !self.sections.standard_library_from.is_empty() {
-            let std_from_imports = self.format_imports(&self.sections.standard_library_from);
-            stdlib_imports.extend(std_from_imports);
-        }
-
-        // Third-party imports - direct first, then from
-        if !self.sections.third_party_direct.is_empty() {
-            let third_direct_imports = self.format_imports(&self.sections.third_party_direct);
-            third_party_imports.extend(third_direct_imports);
-        }
-        if !self.sections.third_party_from.is_empty() {
-            let third_from_imports = self.format_imports(&self.sections.third_party_from);
-            third_party_imports.extend(third_from_imports);
-        }
-
-        // Local imports - direct first, then from
-        if !self.sections.local_direct.is_empty() {
-            let local_direct_imports = self.format_imports(&self.sections.local_direct);
-            local_imports.extend(local_direct_imports);
-        }
-        if !self.sections.local_from.is_empty() {
-            let local_from_imports = self.format_imports(&self.sections.local_from);
-            local_imports.extend(local_from_imports);
-        }
-
-        // Sort each category alphabetically
-        future_imports.sort_by(|a, b| Self::sort_import_statements(a, b));
-        stdlib_imports.sort_by(|a, b| Self::sort_import_statements(a, b));
-        third_party_imports.sort_by(|a, b| Self::sort_import_statements(a, b));
-        local_imports.sort_by(|a, b| Self::sort_import_statements(a, b));
+        let future_imports = self.categorize_section(&self.sections.future, &[]);
+        let stdlib_imports = self.categorize_section(
+            &self.sections.standard_library_direct,
+            &self.sections.standard_library_from,
+        );
+        let third_party_imports = self.categorize_section(
+            &self.sections.third_party_direct,
+            &self.sections.third_party_from,
+        );
+        let local_imports =
+            self.categorize_section(&self.sections.local_direct, &self.sections.local_from);
 
         (
             future_imports,
@@ -715,46 +645,18 @@ impl ImportHelper {
         category
     }
 
-    /// Extract the package name from an import statement
+    /// Extract the package name from an import statement.
+    ///
+    /// Delegates to `utils::parsing` so the parse rules have one home.
     fn extract_package(import_statement: &str) -> String {
-        if let Some(from_part) = import_statement.strip_prefix("from ") {
-            if let Some(import_pos) = from_part.find(" import ") {
-                return from_part[..import_pos].trim().to_string();
-            }
-        } else if let Some(import_part) = import_statement.strip_prefix("import ") {
-            // For direct imports, return the full module path
-            return import_part
-                .split_whitespace()
-                .next()
-                .unwrap_or(import_part)
-                .trim()
-                .to_string();
-        }
-
-        import_statement.to_string()
+        crate::utils::parsing::extract_package(import_statement)
     }
 
-    /// Extract imported items from an import statement
+    /// Extract imported items from an import statement.
+    ///
+    /// Delegates to `utils::parsing` (alias-aware, direct-imports have no items).
     fn extract_items(import_statement: &str) -> Vec<String> {
-        if let Some(from_part) = import_statement.strip_prefix("from ") {
-            if let Some(import_pos) = from_part.find(" import ") {
-                let items_part = &from_part[import_pos + 8..];
-                let cleaned = items_part.replace(['(', ')'], "").replace(',', " ");
-                let mut items: Vec<String> = cleaned
-                    .split_whitespace()
-                    .map(|s| s.trim().to_string())
-                    .filter(|s| !s.is_empty())
-                    .collect();
-
-                // Sort items with ALL_CAPS first, then mixed case alphabetically
-                items.sort_by(|a, b| crate::utils::parsing::custom_import_sort(a, b));
-                return items;
-            }
-        } else if let Some(import_part) = import_statement.strip_prefix("import ") {
-            // For direct imports, the "item" is the module itself
-            return vec![import_part.trim().to_string()];
-        }
-        Vec::new()
+        crate::utils::parsing::extract_items(import_statement)
     }
 
     /// Check if this is a local/relative import
@@ -770,16 +672,16 @@ impl ImportHelper {
 
         let package = Self::extract_package(import_statement);
 
-        // Check custom local package prefixes first
+        // Check custom local package prefixes first (module-path boundaries)
         for prefix in &self.local_package_prefixes {
-            if package.starts_with(prefix.as_str()) {
+            if crate::utils::categorization::matches_local_prefix(&package, prefix) {
                 return true;
             }
         }
 
         // Fallback to package_name check for backwards compatibility
         if let Some(pkg_name) = &self.package_name {
-            if package.starts_with(pkg_name) {
+            if crate::utils::categorization::matches_local_prefix(&package, pkg_name) {
                 return true;
             }
         }
@@ -802,6 +704,34 @@ impl ImportHelper {
     /// Format a list of imports, merging same-package imports where appropriate
     fn format_imports(&self, imports: &[ImportStatement]) -> Vec<String> {
         crate::utils::formatting::format_imports(imports, &self.formatting_config)
+    }
+
+    /// Build one categorized column (direct imports, then from-imports),
+    /// sorting whole statement blocks so multi-line blocks stay contiguous.
+    ///
+    /// Sorting the flattened lines instead would drop a block's closing paren
+    /// above its opening line (#14).
+    fn categorize_section(
+        &self,
+        direct: &[ImportStatement],
+        from: &[ImportStatement],
+    ) -> Vec<String> {
+        let mut blocks: Vec<Vec<String>> = Vec::new();
+        if !direct.is_empty() {
+            blocks.extend(crate::utils::formatting::format_import_blocks(
+                direct,
+                &self.formatting_config,
+            ));
+        }
+        if !from.is_empty() {
+            blocks.extend(crate::utils::formatting::format_import_blocks(
+                from,
+                &self.formatting_config,
+            ));
+        }
+        // Each block is non-empty; sort on its first line (the statement head).
+        blocks.sort_by(|a, b| Self::sort_import_statements(&a[0], &b[0]));
+        blocks.into_iter().flatten().collect()
     }
 
     fn sort_import_statements(a: &str, b: &str) -> std::cmp::Ordering {
@@ -904,8 +834,8 @@ impl ImportHelper {
                     let extracted_typing = Self::extract_typing_imports_from_type(type_name);
                     typing_imports.extend(extracted_typing);
 
-                    // Check for collections.abc imports
-                    if type_name.contains("Callable") {
+                    // Check for collections.abc imports (token-boundary, not substring)
+                    if Self::type_identifiers(type_name).contains("Callable") {
                         collections_abc_imports.insert("Callable".to_string());
                     }
                 }
@@ -943,33 +873,27 @@ impl ImportHelper {
         }
     }
 
+    /// Split a type expression into its identifier tokens.
+    ///
+    /// `dict[str, Optional[User]]` -> {`dict`, `str`, `Optional`, `User`}.
+    /// Token boundaries prevent `Anything` from matching `Any` (#18).
+    fn type_identifiers(type_str: &str) -> std::collections::HashSet<&str> {
+        type_str
+            .split(|c: char| !(c.is_alphanumeric() || c == '_'))
+            .filter(|s| !s.is_empty())
+            .collect()
+    }
+
     /// Extract typing imports from a complex type string
     /// This handles types like list[Any], dict[str, Any], etc.
     /// Only imports what's actually needed for Python 3.13+ (Any, Generic, `TypeVar`, Protocol)
     fn extract_typing_imports_from_type(type_str: &str) -> std::collections::HashSet<String> {
-        let mut typing_imports = std::collections::HashSet::new();
-
-        // Check for Any type (used in generics and standalone)
-        if type_str.contains("Any") {
-            typing_imports.insert("Any".to_string());
-        }
-
-        // Check for Generic type (used for generic classes)
-        if type_str.contains("Generic") {
-            typing_imports.insert("Generic".to_string());
-        }
-
-        // Check for TypeVar usage
-        if type_str.contains("TypeVar") {
-            typing_imports.insert("TypeVar".to_string());
-        }
-
-        // Check for Protocol type (structural subtyping)
-        if type_str.contains("Protocol") {
-            typing_imports.insert("Protocol".to_string());
-        }
-
-        typing_imports
+        let idents = Self::type_identifiers(type_str);
+        ["Any", "Generic", "TypeVar", "Protocol"]
+            .iter()
+            .filter(|name| idents.contains(**name))
+            .map(|name| (*name).to_string())
+            .collect()
     }
 }
 

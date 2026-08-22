@@ -3,13 +3,31 @@
 //! This module provides functions for formatting Python import statements
 //! according to PEP 8 and common formatting standards (isort, Black).
 
-use super::parsing::custom_import_sort;
+use super::parsing::{custom_import_sort, item_sort_key};
 use crate::types::{FormattingConfig, ImportStatement};
 use std::collections::{HashMap, HashSet};
 
-/// Format a list of imports, merging same-package imports where appropriate
+/// Format a list of imports, merging same-package imports where appropriate.
+///
+/// Returns one flat line per output row (multi-line blocks span several rows).
 #[must_use]
 pub fn format_imports(imports: &[ImportStatement], config: &FormattingConfig) -> Vec<String> {
+    format_import_blocks(imports, config)
+        .into_iter()
+        .flatten()
+        .collect()
+}
+
+/// Format imports as blocks: each entry is one statement's line(s).
+///
+/// A plain import is a one-line block; a wrapped `from x import (...)` is a
+/// multi-line block kept together. Callers that re-sort output must sort these
+/// blocks, never the flattened lines, or continuation lines scramble (#14).
+#[must_use]
+pub fn format_import_blocks(
+    imports: &[ImportStatement],
+    config: &FormattingConfig,
+) -> Vec<Vec<String>> {
     let mut package_imports: HashMap<String, Vec<&ImportStatement>> = HashMap::new();
 
     // Group imports by package
@@ -32,11 +50,11 @@ pub fn format_imports(imports: &[ImportStatement], config: &FormattingConfig) ->
         if let Some(first) = imports_for_package.first() {
             if imports_for_package.len() == 1 && first.items.is_empty() {
                 // Single direct import (e.g., "import os"), use as-is
-                result.push(first.statement.clone());
+                result.push(vec![first.statement.clone()]);
             } else {
                 // Either multiple imports from same package, or a single import with items
                 // In both cases, apply formatting logic (may need multi-line)
-                result.extend(merge_package_imports(imports_for_package, config));
+                result.push(merge_package_imports(imports_for_package, config));
             }
         }
     }
@@ -64,7 +82,7 @@ pub fn merge_package_imports(
     }
 
     let mut sorted_items: Vec<_> = all_items.into_iter().collect();
-    sorted_items.sort_by(|a, b| custom_import_sort(a, b));
+    sorted_items.sort_by(|a, b| custom_import_sort(item_sort_key(a), item_sort_key(b)));
 
     // Determine if we should use multi-line format
     let should_use_multiline = if config.force_multiline {

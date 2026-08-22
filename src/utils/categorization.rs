@@ -55,25 +55,45 @@ pub fn is_local_import<S: ::std::hash::BuildHasher>(
     let package = extract_package(import_statement);
 
     // Check custom local package prefixes
-    for prefix in local_package_prefixes {
-        if package.starts_with(prefix.as_str()) {
-            return true;
-        }
-    }
-
-    false
+    local_package_prefixes
+        .iter()
+        .any(|prefix| matches_local_prefix(&package, prefix))
 }
 
-/// Check if a package is part of Python's standard library
+/// Whether `package` belongs to the local `prefix`, on module-path boundaries.
+///
+/// `myproject` matches `myproject` and `myproject.core`, but not `myproject_utils`
+/// or `mypyfoo`. Prevents a short prefix from claiming unrelated packages (#16).
+#[must_use]
+pub(crate) fn matches_local_prefix(package: &str, prefix: &str) -> bool {
+    package == prefix
+        || package
+            .strip_prefix(prefix)
+            .is_some_and(|rest| rest.starts_with('.'))
+}
+
+/// Check if a package is part of Python's standard library.
+///
+/// Matches the exact name or, for a dotted path, its root segment
+/// (`urllib.parse` -> `urllib`). Uses the built-in default list; for
+/// registry-aware categorization that reflects runtime customization, use
+/// [`ImportHelper`](crate::ImportHelper).
 #[must_use]
 pub fn is_standard_library_package(package: &str) -> bool {
     PYTHON_STDLIB_MODULES.contains(&package)
+        || root_segment(package).is_some_and(|root| PYTHON_STDLIB_MODULES.contains(&root))
 }
 
-/// Check if a package is a common third-party package
+/// Check if a package is a common third-party package (built-in default list).
 #[must_use]
 pub fn is_common_third_party_package(package: &str) -> bool {
     COMMON_THIRD_PARTY_PACKAGES.contains(&package)
+        || root_segment(package).is_some_and(|root| COMMON_THIRD_PARTY_PACKAGES.contains(&root))
+}
+
+/// Root (first dotted segment) of a package path, if it has one.
+fn root_segment(package: &str) -> Option<&str> {
+    package.split_once('.').map(|(root, _)| root)
 }
 
 #[cfg(test)]

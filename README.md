@@ -34,7 +34,8 @@ over and over. Plus, I wanted to learn Rust better by building something
 actually useful.
 
 This is my first "real" Rust library, so the code might not be perfect, but it
-works well and has decent test coverage!
+is covered by unit and exact-output integration tests (the formatting path is
+pinned with full-string assertions, not substring checks).
 
 ## Quick Start
 
@@ -50,7 +51,8 @@ Then use it:
 ```rust
 use py_import_helper::ImportHelper;
 
-let mut helper = ImportHelper::new();
+// Pass your package name so its imports are recognized as local
+let mut helper = ImportHelper::with_package_name("myproject".to_string());
 
 // Just throw your imports at it
 helper.add_import_string("from typing import Any, Optional");

@@ -131,9 +131,10 @@ fn test_import_spec_api() {
     let (_, stdlib, _, _) = helper.get_categorized();
     let (_, _, tc_third_party, _) = helper.get_type_checking_categorized();
 
+    // Exact: a direct import must stay a plain `import`, never `from sys import sys`.
     assert!(
-        stdlib.iter().any(|s| s.contains("import sys")),
-        "Should contain 'import sys', got: {:?}",
+        stdlib.iter().any(|s| s == "import sys"),
+        "Should contain exact 'import sys', got: {:?}",
         stdlib
     );
     assert!(stdlib.iter().any(|s| s.contains("from typing import")));
@@ -173,9 +174,17 @@ fn test_mixed_import_types() {
 
     let (_, stdlib, _, _) = helper.get_categorized();
 
-    // Should have both direct and from imports
-    assert!(stdlib.iter().any(|s| s.contains("import json")));
-    assert!(stdlib.iter().any(|s| s.contains("from json import")));
+    // Should have both direct and from imports, exact and unmerged.
+    assert!(
+        stdlib.iter().any(|s| s == "import json"),
+        "got: {:?}",
+        stdlib
+    );
+    assert!(
+        stdlib.iter().any(|s| s == "from json import dumps, loads"),
+        "got: {:?}",
+        stdlib
+    );
 }
 
 /// Test empty helper
