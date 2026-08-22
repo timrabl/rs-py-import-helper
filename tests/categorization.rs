@@ -60,3 +60,18 @@ fn local_prefix_matches_exact_and_dotted() {
     );
     assert_eq!(third, vec!["from myproject_utils import c"]);
 }
+
+// --- #17: registry_mut invalidates the categorization cache -----------------
+
+#[test]
+fn registry_mut_invalidates_cache() {
+    let mut h = ImportHelper::new();
+    h.add_import_string("import fooxyz"); // cached third-party
+    let (_f, _s, third, _l) = h.get_categorized();
+    assert_eq!(third, vec!["import fooxyz"]);
+
+    h.registry_mut().add_stdlib_package("fooxyz");
+    h.add_import_string("import fooxyz");
+    let (_f, stdlib, _t, _l) = h.get_categorized();
+    assert!(stdlib.iter().any(|s| s == "import fooxyz"));
+}

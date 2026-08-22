@@ -118,7 +118,10 @@ impl ImportHelper {
     /// assert!(stdlib.iter().any(|s| s.contains("my_custom_stdlib")));
     /// ```
     pub fn registry_mut(&mut self) -> &mut PackageRegistry {
-        // Clear cache when registry is modified
+        // A registry change can alter categorization, so drop the cache now;
+        // the next categorize re-evaluates against the updated registry.
+        // (Previously this comment lied and nothing was cleared.)
+        self.category_cache.clear();
         &mut self.registry
     }
 
