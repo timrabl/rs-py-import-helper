@@ -327,57 +327,19 @@ impl ImportHelper {
 
     #[must_use]
     pub fn get_type_checking_categorized_impl(&self) -> CategorizedImports {
-        let mut future_imports = Vec::new();
-        let mut stdlib_imports = Vec::new();
-        let mut third_party_imports = Vec::new();
-        let mut local_imports = Vec::new();
-
-        // Future imports
-        if !self.sections.type_checking_future.is_empty() {
-            let future = self.format_imports(&self.sections.type_checking_future);
-            future_imports.extend(future);
-        }
-
-        // Standard library imports - direct first, then from
-        if !self
-            .sections
-            .type_checking_standard_library_direct
-            .is_empty()
-        {
-            let std_direct =
-                self.format_imports(&self.sections.type_checking_standard_library_direct);
-            stdlib_imports.extend(std_direct);
-        }
-        if !self.sections.type_checking_standard_library_from.is_empty() {
-            let std_from = self.format_imports(&self.sections.type_checking_standard_library_from);
-            stdlib_imports.extend(std_from);
-        }
-
-        // Third-party imports - direct first, then from
-        if !self.sections.type_checking_third_party_direct.is_empty() {
-            let third_direct = self.format_imports(&self.sections.type_checking_third_party_direct);
-            third_party_imports.extend(third_direct);
-        }
-        if !self.sections.type_checking_third_party_from.is_empty() {
-            let third_from = self.format_imports(&self.sections.type_checking_third_party_from);
-            third_party_imports.extend(third_from);
-        }
-
-        // Local imports - direct first, then from
-        if !self.sections.type_checking_local_direct.is_empty() {
-            let local_direct = self.format_imports(&self.sections.type_checking_local_direct);
-            local_imports.extend(local_direct);
-        }
-        if !self.sections.type_checking_local_from.is_empty() {
-            let local_from = self.format_imports(&self.sections.type_checking_local_from);
-            local_imports.extend(local_from);
-        }
-
-        // Sort each category alphabetically
-        future_imports.sort_by(|a, b| Self::sort_import_statements(a, b));
-        stdlib_imports.sort_by(|a, b| Self::sort_import_statements(a, b));
-        third_party_imports.sort_by(|a, b| Self::sort_import_statements(a, b));
-        local_imports.sort_by(|a, b| Self::sort_import_statements(a, b));
+        let future_imports = self.categorize_section(&self.sections.type_checking_future, &[]);
+        let stdlib_imports = self.categorize_section(
+            &self.sections.type_checking_standard_library_direct,
+            &self.sections.type_checking_standard_library_from,
+        );
+        let third_party_imports = self.categorize_section(
+            &self.sections.type_checking_third_party_direct,
+            &self.sections.type_checking_third_party_from,
+        );
+        let local_imports = self.categorize_section(
+            &self.sections.type_checking_local_direct,
+            &self.sections.type_checking_local_from,
+        );
 
         (
             future_imports,
@@ -391,52 +353,17 @@ impl ImportHelper {
     /// Returns (`future_imports`, `stdlib_imports`, `third_party_imports`, `local_imports`)
     #[must_use]
     pub fn get_categorized(&self) -> CategorizedImports {
-        let mut future_imports = Vec::new();
-        let mut stdlib_imports = Vec::new();
-        let mut third_party_imports = Vec::new();
-        let mut local_imports = Vec::new();
-
-        // Future imports
-        if !self.sections.future.is_empty() {
-            let future = self.format_imports(&self.sections.future);
-            future_imports.extend(future);
-        }
-
-        // Standard library imports - direct first, then from
-        if !self.sections.standard_library_direct.is_empty() {
-            let std_direct_imports = self.format_imports(&self.sections.standard_library_direct);
-            stdlib_imports.extend(std_direct_imports);
-        }
-        if !self.sections.standard_library_from.is_empty() {
-            let std_from_imports = self.format_imports(&self.sections.standard_library_from);
-            stdlib_imports.extend(std_from_imports);
-        }
-
-        // Third-party imports - direct first, then from
-        if !self.sections.third_party_direct.is_empty() {
-            let third_direct_imports = self.format_imports(&self.sections.third_party_direct);
-            third_party_imports.extend(third_direct_imports);
-        }
-        if !self.sections.third_party_from.is_empty() {
-            let third_from_imports = self.format_imports(&self.sections.third_party_from);
-            third_party_imports.extend(third_from_imports);
-        }
-
-        // Local imports - direct first, then from
-        if !self.sections.local_direct.is_empty() {
-            let local_direct_imports = self.format_imports(&self.sections.local_direct);
-            local_imports.extend(local_direct_imports);
-        }
-        if !self.sections.local_from.is_empty() {
-            let local_from_imports = self.format_imports(&self.sections.local_from);
-            local_imports.extend(local_from_imports);
-        }
-
-        // Sort each category alphabetically
-        future_imports.sort_by(|a, b| Self::sort_import_statements(a, b));
-        stdlib_imports.sort_by(|a, b| Self::sort_import_statements(a, b));
-        third_party_imports.sort_by(|a, b| Self::sort_import_statements(a, b));
-        local_imports.sort_by(|a, b| Self::sort_import_statements(a, b));
+        let future_imports = self.categorize_section(&self.sections.future, &[]);
+        let stdlib_imports = self.categorize_section(
+            &self.sections.standard_library_direct,
+            &self.sections.standard_library_from,
+        );
+        let third_party_imports = self.categorize_section(
+            &self.sections.third_party_direct,
+            &self.sections.third_party_from,
+        );
+        let local_imports =
+            self.categorize_section(&self.sections.local_direct, &self.sections.local_from);
 
         (
             future_imports,
@@ -774,6 +701,34 @@ impl ImportHelper {
     /// Format a list of imports, merging same-package imports where appropriate
     fn format_imports(&self, imports: &[ImportStatement]) -> Vec<String> {
         crate::utils::formatting::format_imports(imports, &self.formatting_config)
+    }
+
+    /// Build one categorized column (direct imports, then from-imports),
+    /// sorting whole statement blocks so multi-line blocks stay contiguous.
+    ///
+    /// Sorting the flattened lines instead would drop a block's closing paren
+    /// above its opening line (#14).
+    fn categorize_section(
+        &self,
+        direct: &[ImportStatement],
+        from: &[ImportStatement],
+    ) -> Vec<String> {
+        let mut blocks: Vec<Vec<String>> = Vec::new();
+        if !direct.is_empty() {
+            blocks.extend(crate::utils::formatting::format_import_blocks(
+                direct,
+                &self.formatting_config,
+            ));
+        }
+        if !from.is_empty() {
+            blocks.extend(crate::utils::formatting::format_import_blocks(
+                from,
+                &self.formatting_config,
+            ));
+        }
+        // Each block is non-empty; sort on its first line (the statement head).
+        blocks.sort_by(|a, b| Self::sort_import_statements(&a[0], &b[0]));
+        blocks.into_iter().flatten().collect()
     }
 
     fn sort_import_statements(a: &str, b: &str) -> std::cmp::Ordering {
