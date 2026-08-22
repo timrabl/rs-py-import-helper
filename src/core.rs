@@ -834,8 +834,8 @@ impl ImportHelper {
                     let extracted_typing = Self::extract_typing_imports_from_type(type_name);
                     typing_imports.extend(extracted_typing);
 
-                    // Check for collections.abc imports
-                    if type_name.contains("Callable") {
+                    // Check for collections.abc imports (token-boundary, not substring)
+                    if Self::type_identifiers(type_name).contains("Callable") {
                         collections_abc_imports.insert("Callable".to_string());
                     }
                 }
@@ -873,33 +873,27 @@ impl ImportHelper {
         }
     }
 
+    /// Split a type expression into its identifier tokens.
+    ///
+    /// `dict[str, Optional[User]]` -> {`dict`, `str`, `Optional`, `User`}.
+    /// Token boundaries prevent `Anything` from matching `Any` (#18).
+    fn type_identifiers(type_str: &str) -> std::collections::HashSet<&str> {
+        type_str
+            .split(|c: char| !(c.is_alphanumeric() || c == '_'))
+            .filter(|s| !s.is_empty())
+            .collect()
+    }
+
     /// Extract typing imports from a complex type string
     /// This handles types like list[Any], dict[str, Any], etc.
     /// Only imports what's actually needed for Python 3.13+ (Any, Generic, `TypeVar`, Protocol)
     fn extract_typing_imports_from_type(type_str: &str) -> std::collections::HashSet<String> {
-        let mut typing_imports = std::collections::HashSet::new();
-
-        // Check for Any type (used in generics and standalone)
-        if type_str.contains("Any") {
-            typing_imports.insert("Any".to_string());
-        }
-
-        // Check for Generic type (used for generic classes)
-        if type_str.contains("Generic") {
-            typing_imports.insert("Generic".to_string());
-        }
-
-        // Check for TypeVar usage
-        if type_str.contains("TypeVar") {
-            typing_imports.insert("TypeVar".to_string());
-        }
-
-        // Check for Protocol type (structural subtyping)
-        if type_str.contains("Protocol") {
-            typing_imports.insert("Protocol".to_string());
-        }
-
-        typing_imports
+        let idents = Self::type_identifiers(type_str);
+        ["Any", "Generic", "TypeVar", "Protocol"]
+            .iter()
+            .filter(|name| idents.contains(**name))
+            .map(|name| (*name).to_string())
+            .collect()
     }
 }
 
