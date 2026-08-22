@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.1](https://github.com/timrabl/rs-py-import-helper/compare/v0.2.0...v0.2.1) - 2026-08-22
+
+### 🐛 Bug Fixes
+
+- correct core import formatting and harden tests ([#19](https://github.com/timrabl/rs-py-import-helper/pull/19))
+
+### 📦 Other
+
+- *(deps)* bump criterion from 0.7.0 to 0.8.2 ([#10](https://github.com/timrabl/rs-py-import-helper/pull/10))
+
 ## [0.2.0](https://github.com/timrabl/rs-py-import-helper/compare/v0.1.0...v0.2.0) - 2025-10-27
 
 ### ♻️  Refactor
