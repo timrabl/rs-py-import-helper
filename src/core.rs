@@ -669,16 +669,16 @@ impl ImportHelper {
 
         let package = Self::extract_package(import_statement);
 
-        // Check custom local package prefixes first
+        // Check custom local package prefixes first (module-path boundaries)
         for prefix in &self.local_package_prefixes {
-            if package.starts_with(prefix.as_str()) {
+            if crate::utils::categorization::matches_local_prefix(&package, prefix) {
                 return true;
             }
         }
 
         // Fallback to package_name check for backwards compatibility
         if let Some(pkg_name) = &self.package_name {
-            if package.starts_with(pkg_name) {
+            if crate::utils::categorization::matches_local_prefix(&package, pkg_name) {
                 return true;
             }
         }

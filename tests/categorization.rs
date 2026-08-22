@@ -33,3 +33,30 @@ fn dotted_stdlib_import_categorizes_as_stdlib() {
     assert_eq!(stdlib, vec!["from urllib.parse import urlparse"]);
     assert!(third.is_empty());
 }
+
+// --- #16: local prefix word boundary ----------------------------------------
+
+#[test]
+fn local_prefix_does_not_claim_longer_names() {
+    let mut h = ImportHelper::new();
+    h.add_local_package_prefix("my");
+    h.add_import_string("from mypy import api"); // must NOT be local
+    let (_f, _s, third, local) = h.get_categorized();
+    assert_eq!(third, vec!["from mypy import api"]);
+    assert!(local.is_empty());
+}
+
+#[test]
+fn local_prefix_matches_exact_and_dotted() {
+    let mut h = ImportHelper::new();
+    h.add_local_package_prefix("myproject");
+    h.add_import_string("from myproject import a");
+    h.add_import_string("from myproject.core import b");
+    h.add_import_string("from myproject_utils import c"); // NOT local
+    let (_f, _s, third, local) = h.get_categorized();
+    assert_eq!(
+        local,
+        vec!["from myproject import a", "from myproject.core import b"]
+    );
+    assert_eq!(third, vec!["from myproject_utils import c"]);
+}

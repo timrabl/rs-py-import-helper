@@ -55,13 +55,21 @@ pub fn is_local_import<S: ::std::hash::BuildHasher>(
     let package = extract_package(import_statement);
 
     // Check custom local package prefixes
-    for prefix in local_package_prefixes {
-        if package.starts_with(prefix.as_str()) {
-            return true;
-        }
-    }
+    local_package_prefixes
+        .iter()
+        .any(|prefix| matches_local_prefix(&package, prefix))
+}
 
-    false
+/// Whether `package` belongs to the local `prefix`, on module-path boundaries.
+///
+/// `myproject` matches `myproject` and `myproject.core`, but not `myproject_utils`
+/// or `mypyfoo`. Prevents a short prefix from claiming unrelated packages (#16).
+#[must_use]
+pub(crate) fn matches_local_prefix(package: &str, prefix: &str) -> bool {
+    package == prefix
+        || package
+            .strip_prefix(prefix)
+            .is_some_and(|rest| rest.starts_with('.'))
 }
 
 /// Check if a package is part of Python's standard library.
